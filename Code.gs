@@ -15,7 +15,7 @@
  * CONFIGURATION
  ****************************************************************************/
 var CONFIG = {
-  INDEX_HTML_URL: 'https://smiley.github.io/islamMeter/index.html',
+  INDEX_HTML_URL: 'https://authenticsm1les.github.io/islamMeter/index.html',
   STORAGE_SPREADSHEET_NAME: 'IslamMeter Data',
   WEBHOOK_SHEET: 'Webhook Data',
   RESPONSES_SHEET: 'Raw Responses',
