@@ -126,9 +126,15 @@ function populateForm() {
 /****************************************************************************
  * doGet — Web App: redirect user to index.html with their scores
  ****************************************************************************/
-function doGet() {
+function doGet(e) {
   try {
     var form = FormApp.getActiveForm();
+
+    // Auto-populate form questions if empty
+    if (form.getItems(FormApp.ItemType.SCALE).length === 0) {
+      populateForm();
+    }
+
     var responses = form.getResponses();
     if (responses.length === 0) {
       return HtmlService.createHtmlOutput(
