@@ -128,7 +128,14 @@ function populateForm() {
  ****************************************************************************/
 function doGet(e) {
   try {
+    if (e && e.parameter && e.parameter.check === '1') {
+      return checkFormState();
+    }
+
     var form = FormApp.getActiveForm();
+
+    // Ensure form is published and accepting responses
+    form.setAcceptingResponses(true).setRequireLogin(false).setLimitOneResponsePerUser(false);
 
     // Auto-populate form questions if empty
     if (form.getItems(FormApp.ItemType.SCALE).length === 0) {
@@ -292,6 +299,29 @@ function getSheet(ss, name, headers) {
 /****************************************************************************
  * TEST
  ****************************************************************************/
+function checkFormState() {
+  var form = FormApp.getActiveForm();
+  var result = {
+    id: form.getId(),
+    title: form.getTitle(),
+    acceptingResponses: form.isAcceptingResponses(),
+    requireLogin: form.requiresLogin(),
+    items: form.getItems().length,
+    scaleItems: form.getItems(FormApp.ItemType.SCALE).length,
+    limitOneResponse: form.hasLimitOneResponsePerUser(),
+  };
+  try {
+    var f = DriveApp.getFileById(form.getId());
+    result.access = f.getSharingAccess().toString();
+    result.permission = f.getSharingPermission().toString();
+  } catch (e) {
+    result.driveError = e.message;
+  }
+  return HtmlService.createHtmlOutput(
+    '<pre>' + JSON.stringify(result, null, 2) + '</pre>'
+  );
+}
+
 function testScores() {
   var neutral = [];
   for (var i = 0; i < 30; i++) neutral.push(3);
