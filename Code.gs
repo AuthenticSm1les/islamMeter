@@ -16,6 +16,7 @@
  ****************************************************************************/
 var CONFIG = {
   INDEX_HTML_URL: 'https://authenticsm1les.github.io/islamMeter/index.html',
+  WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzWQkV93TTmpZAvO1nbHzyvlNU7o85lLNmIszbssN7_76zBfg8haKidCAwmh-bplB2G2A/exec',
   STORAGE_SPREADSHEET_NAME: 'IslamMeter Data',
   WEBHOOK_SHEET: 'Webhook Data',
   RESPONSES_SHEET: 'Raw Responses',
@@ -108,6 +109,15 @@ function populateForm() {
     form.addScaleItem().setTitle(text).setBounds(1, 5)
       .setLabels('Strongly Disagree', 'Strongly Agree');
   });
+
+  form.setConfirmationMessage(
+    'Thank you for completing the assessment.\n\n' +
+    'Your personalised IslamMeter dashboard is ready. ' +
+    'Click the link below to view your results.\n\n' +
+    CONFIG.WEB_APP_URL + '\n\n' +
+    'If you are not redirected automatically, click the link above. ' +
+    'Data is collected anonymously for research purposes.'
+  );
 
   Logger.log('Added ' + questions.length + ' questions.');
   Logger.log('Form URL: ' + form.getPublishedUrl());
