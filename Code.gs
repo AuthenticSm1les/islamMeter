@@ -17,6 +17,7 @@
 var CONFIG = {
   INDEX_HTML_URL: 'https://authenticsm1les.github.io/islamMeter/index.html',
   WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzWQkV93TTmpZAvO1nbHzyvlNU7o85lLNmIszbssN7_76zBfg8haKidCAwmh-bplB2G2A/exec',
+  FORM_ID: '1s3_tKZXAcHFDuAo6cMvLv6u2MqTbENw5GoCCOq_iayw',
   STORAGE_SPREADSHEET_NAME: 'IslamMeter Data',
   WEBHOOK_SHEET: 'Webhook Data',
   RESPONSES_SHEET: 'Raw Responses',
@@ -64,7 +65,7 @@ function buildUrl(scores) {
  ****************************************************************************/
 function recreateForm() {
   // Delete old form and create a brand new one with proper initialization
-  var oldForm = FormApp.getActiveForm();
+  var oldForm = FormApp.openById(CONFIG.FORM_ID);
   var oldId = oldForm.getId();
 
   var form = FormApp.create('IslamMeter Assessment');
@@ -133,7 +134,7 @@ function recreateForm() {
 }
 
 function populateForm() {
-  var form = FormApp.getActiveForm();
+  var form = FormApp.openById(CONFIG.FORM_ID);
   form.setTitle('IslamMeter Assessment')
     .setDescription('Rate each statement: 1 = Strongly Disagree → 5 = Strongly Agree')
     .setCollectEmail(false)
@@ -203,7 +204,7 @@ function doGet(e) {
       if (e.parameter.fix === '1') return fixFormAndShow();
     }
 
-    var form = FormApp.getActiveForm();
+    var form = FormApp.openById(CONFIG.FORM_ID);
 
     // Ensure form is published and accepting responses
     form.setAcceptingResponses(true).setLimitOneResponsePerUser(false);
@@ -341,7 +342,7 @@ function installTriggers() {
   }
 
   ScriptApp.newTrigger('onFormSubmit')
-    .forForm(FormApp.getActiveForm())
+    .forForm(FormApp.openById(CONFIG.FORM_ID))
     .onFormSubmit()
     .create();
 
@@ -371,7 +372,7 @@ function getSheet(ss, name, headers) {
  * TEST
  ****************************************************************************/
 function checkFormState() {
-  var form = FormApp.getActiveForm();
+  var form = FormApp.openById(CONFIG.FORM_ID);
   var result = {
     id: form.getId(),
     title: form.getTitle(),
@@ -395,7 +396,7 @@ function checkFormState() {
 
 function fixFormAndShow() {
   try {
-    var form = FormApp.getActiveForm();
+    var form = FormApp.openById(CONFIG.FORM_ID);
     var id = form.getId();
 
     form.setAcceptingResponses(true);
@@ -451,7 +452,7 @@ function fixFormAndShow() {
 
 function simpleFix() {
   // Minimal: just publish the form
-  var form = FormApp.getActiveForm();
+  var form = FormApp.openById(CONFIG.FORM_ID);
   form.setAcceptingResponses(true);
   Logger.log('Setting applied. Accepting: ' + form.isAcceptingResponses() + ', RequireLogin: ' + form.requiresLogin());
 }

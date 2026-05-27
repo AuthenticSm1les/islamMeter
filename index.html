@@ -202,32 +202,32 @@
     {
       name: 'Traditionalist',
       desc: 'Deeply committed to orthodox beliefs, rules, and traditional scholarship.',
-      vector: [ 2,  2,  1,  1,  2,  2],
+      vector: [10, 10,  5,  5, 10, 10],
     },
     {
       name: 'Cultural Muslim',
       desc: 'Identity rooted in heritage and community; relaxed about rules and dogma.',
-      vector: [ 1, -1,  1,  2, -1, -1],
+      vector: [ 5, -5,  5, 10, -5, -5],
     },
     {
       name: 'Political Activist',
       desc: 'Seeks Islamic governance; comfortable with coercion for religious ends.',
-      vector: [ 2,  1, -2,  1,  1,  2],
+      vector: [10,  5, -10,  5,  5, 10],
     },
     {
       name: 'Spiritual Seeker',
       desc: 'Strong personal faith but skeptical of institutions, rules, and tradition.',
-      vector: [ 2, -2,  2,  0, -2, -1],
+      vector: [10, -10, 10,  0, -10, -5],
     },
     {
       name: 'Liberal Reformer',
       desc: 'Progressive interpretation; favours democracy, pluralism, and private faith.',
-      vector: [ 1, -2,  2,  1, -2,  0],
+      vector: [ 5, -10, 10,  5, -10,  0],
     },
     {
       name: 'Quietist',
       desc: 'Pious and observant but apolitical; keeps religion out of public square.',
-      vector: [ 2,  2,  2,  0,  1, -2],
+      vector: [10, 10, 10,  0,  5, -10],
     },
   ];
 
@@ -322,9 +322,9 @@
         maintainAspectRatio: true,
         scales: {
           r: {
-            min: -2,
-            max: 2,
-            ticks: { stepSize: 1, font: { size: 10 }, backdropColor: 'transparent' },
+            min: -10,
+            max: 10,
+            ticks: { stepSize: 2, font: { size: 10 }, backdropColor: 'transparent' },
             grid: { color: 'rgba(0,0,0,0.06)' },
             angleLines: { color: 'rgba(0,0,0,0.06)' },
             pointLabels: { font: { size: 11, weight: '500' }, color: '#374151' },
