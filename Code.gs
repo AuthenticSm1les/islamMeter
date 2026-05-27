@@ -62,6 +62,76 @@ function buildUrl(scores) {
 /****************************************************************************
  * POPULATE FORM — Run ONCE in the editor to add 30 questions
  ****************************************************************************/
+function recreateForm() {
+  // Delete old form and create a brand new one with proper initialization
+  var oldForm = FormApp.getActiveForm();
+  var oldId = oldForm.getId();
+
+  var form = FormApp.create('IslamMeter Assessment');
+  var newId = form.getId();
+
+  // Populate the new form
+  form.setTitle('IslamMeter Assessment')
+    .setDescription('Rate each statement: 1 = Strongly Disagree → 5 = Strongly Agree')
+    .setCollectEmail(false)
+    .setShowLinkToRespondAgain(true)
+    .setAllowResponseEdits(false)
+    .setAcceptingResponses(true)
+    .setLimitOneResponsePerUser(false);
+
+  // Add all 30 questions
+  var questions = [
+    'I feel a deep personal commitment to the core dogmas of Islam.',
+    'My sense of self is fundamentally anchored in my belief in the divine.',
+    'Whether others see me as Muslim is less important than my internal conviction.',
+    'My religious identity is the most important factor in my personal life.',
+    'I would maintain my faith even if I were completely isolated from other Muslims.',
+    'When I fail to follow an Islamic rule, I view it as my own personal struggle (sin).',
+    'I believe the rules of Islam are fixed, even if I struggle to live up to them.',
+    'I don\'t believe in "reinterpreting" rules just to make them easier to follow.',
+    'I feel a sense of guilt when my actions do not align with Islamic teachings.',
+    'I believe that Islamic laws are timeless and not subject to change based on cultural trends.',
+    'I believe Islamic values should only be promoted through social influence, not force.',
+    'I am opposed to any form of revolutionary or coerced imposition of faith.',
+    'I believe in working within existing civic/democratic systems to advocate for values.',
+    'I believe that religious influence in politics should respect the rights of all citizens.',
+    'I am fundamentally against the use of violence or intimidation to achieve religious goals.',
+    'I feel a strong sense of belonging to the global Muslim community (Ummah).',
+    'I participate in Islamic cultural traditions because they are part of my heritage.',
+    'I feel a sense of comfort being around other Muslims regardless of their piety.',
+    'I value the traditions and customs of my culture even when they are distinct from strict religious dogma.',
+    'Celebrating community festivals is an essential part of maintaining my identity.',
+    'I believe the guidance of traditional scholarship is essential for understanding Islam.',
+    'I prefer relying on established consensus rather than personal interpretation.',
+    'I am skeptical of "modernized" versions of faith that deviate from tradition.',
+    'I believe that learning from qualified scholars is the most reliable path to knowledge.',
+    'I trust historical interpretations of texts more than contemporary perspectives.',
+    'I believe Islamic ethics should play a visible role in shaping public law.',
+    'I think a society functions best when its laws are informed by religious moral frameworks.',
+    'I believe religion should not be relegated solely to the private, individual sphere.',
+    'I believe that public policy should reflect the moral values derived from my faith.',
+    'I see no conflict between living a modern civic life and advocating for religious morality in the public space.',
+  ];
+
+  questions.forEach(function (text) {
+    form.addScaleItem().setTitle(text).setBounds(1, 5)
+      .setLabels('Strongly Disagree', 'Strongly Agree');
+  });
+
+  form.setConfirmationMessage(
+    'Thank you for completing the assessment.\n\n' +
+    'Your personalised IslamMeter dashboard is ready. ' +
+    'Click the link below to view your results.\n\n' +
+    CONFIG.WEB_APP_URL + '\n\n' +
+    'If you are not redirected automatically, click the link above. ' +
+    'Data is collected anonymously for research purposes.'
+  );
+
+  Logger.log('New form created: ' + newId);
+  Logger.log('Published URL: ' + form.getPublishedUrl());
+  Logger.log('Old form ID: ' + oldId + ' (can be deleted)');
+}
+
 function populateForm() {
   var form = FormApp.getActiveForm();
   form.setTitle('IslamMeter Assessment')
@@ -128,14 +198,15 @@ function populateForm() {
  ****************************************************************************/
 function doGet(e) {
   try {
-    if (e && e.parameter && e.parameter.check === '1') {
-      return checkFormState();
+    if (e && e.parameter) {
+      if (e.parameter.check === '1') return checkFormState();
+      if (e.parameter.fix === '1') return fixFormAndShow();
     }
 
     var form = FormApp.getActiveForm();
 
     // Ensure form is published and accepting responses
-    form.setAcceptingResponses(true).setRequireLogin(false).setLimitOneResponsePerUser(false);
+    form.setAcceptingResponses(true).setLimitOneResponsePerUser(false);
 
     // Auto-populate form questions if empty
     if (form.getItems(FormApp.ItemType.SCALE).length === 0) {
@@ -320,6 +391,69 @@ function checkFormState() {
   return HtmlService.createHtmlOutput(
     '<pre>' + JSON.stringify(result, null, 2) + '</pre>'
   );
+}
+
+function fixFormAndShow() {
+  try {
+    var form = FormApp.getActiveForm();
+    var id = form.getId();
+
+    form.setAcceptingResponses(true);
+
+    if (form.getItems(FormApp.ItemType.SCALE).length === 0) {
+      var qs = [
+        'I feel a deep personal commitment to the core dogmas of Islam.',
+        'My sense of self is fundamentally anchored in my belief in the divine.',
+        'Whether others see me as Muslim is less important than my internal conviction.',
+        'My religious identity is the most important factor in my personal life.',
+        'I would maintain my faith even if I were completely isolated from other Muslims.',
+        'When I fail to follow an Islamic rule, I view it as my own personal struggle (sin).',
+        'I believe the rules of Islam are fixed, even if I struggle to live up to them.',
+        'I don\'t believe in "reinterpreting" rules just to make them easier to follow.',
+        'I feel a sense of guilt when my actions do not align with Islamic teachings.',
+        'I believe that Islamic laws are timeless and not subject to change based on cultural trends.',
+        'I believe Islamic values should only be promoted through social influence, not force.',
+        'I am opposed to any form of revolutionary or coerced imposition of faith.',
+        'I believe in working within existing civic/democratic systems to advocate for values.',
+        'I believe that religious influence in politics should respect the rights of all citizens.',
+        'I am fundamentally against the use of violence or intimidation to achieve religious goals.',
+        'I feel a strong sense of belonging to the global Muslim community (Ummah).',
+        'I participate in Islamic cultural traditions because they are part of my heritage.',
+        'I feel a sense of comfort being around other Muslims regardless of their piety.',
+        'I value the traditions and customs of my culture even when they are distinct from strict religious dogma.',
+        'Celebrating community festivals is an essential part of maintaining my identity.',
+        'I believe the guidance of traditional scholarship is essential for understanding Islam.',
+        'I prefer relying on established consensus rather than personal interpretation.',
+        'I am skeptical of "modernized" versions of faith that deviate from tradition.',
+        'I believe that learning from qualified scholars is the most reliable path to knowledge.',
+        'I trust historical interpretations of texts more than contemporary perspectives.',
+        'I believe Islamic ethics should play a visible role in shaping public law.',
+        'I think a society functions best when its laws are informed by religious moral frameworks.',
+        'I believe religion should not be relegated solely to the private, individual sphere.',
+        'I believe that public policy should reflect the moral values derived from my faith.',
+        'I see no conflict between living a modern civic life and advocating for religious morality in the public space.',
+      ];
+      qs.forEach(function (t) { form.addScaleItem().setTitle(t).setBounds(1, 5).setLabels('Strongly Disagree', 'Strongly Agree'); });
+    }
+
+    var html = '<html><body style="font-family:sans-serif;padding:2rem;">' +
+      '<h2>✓ Done</h2>' +
+      '<p>Accepting: ' + form.isAcceptingResponses() + '</p>' +
+      '<p>Require login: ' + form.requiresLogin() + '</p>' +
+      '<p>Questions: ' + form.getItems(FormApp.ItemType.SCALE).length + '</p>' +
+      '<p><a href="' + form.getPublishedUrl() + '">Open form</a></p>' +
+      '</body></html>';
+    return HtmlService.createHtmlOutput(html);
+  } catch (err) {
+    return HtmlService.createHtmlOutput('<h2>Error</h2><p>' + err.message + '</p>');
+  }
+}
+
+function simpleFix() {
+  // Minimal: just publish the form
+  var form = FormApp.getActiveForm();
+  form.setAcceptingResponses(true);
+  Logger.log('Setting applied. Accepting: ' + form.isAcceptingResponses() + ', RequireLogin: ' + form.requiresLogin());
 }
 
 function testScores() {
