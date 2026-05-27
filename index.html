@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IslamMeter — Identity & Values Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #f6f8fa;
+    color: #1f2937;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+  .container {
+    max-width: 800px;
+    width: 100%;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  header h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #111827;
+  }
+  header p {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-top: 0.35rem;
+  }
+  .card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .card h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+  }
+  .chart-wrapper {
+    position: relative;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .match {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 0.75rem;
+  }
+  .match-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #166534;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .match-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #15803d;
+  }
+  .match-distance {
+    font-size: 0.8rem;
+    color: #4ade80;
+  }
+  .scores-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  @media (min-width: 640px) {
+    .scores-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  .score-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .score-item .dim { color: #6b7280; }
+  .score-item .val { font-weight: 600; color: #1f2937; }
+  .score-item .val.positive { color: #059669; }
+  .score-item .val.negative { color: #dc2626; }
+  .score-item .val.zero { color: #9ca3af; }
+  .distances { margin-top: 0.5rem; }
+  .dist-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: 0.35rem;
+  }
+  .dist-row.best { background: #f0fdf4; font-weight: 600; color: #15803d; }
+  .dist-row .label { color: #6b7280; }
+  .dist-row.best .label { color: #166534; }
+  .dist-row .dist { font-variant-numeric: tabular-nums; }
+  footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 2rem;
+  }
+  .loading {
+    text-align: center;
+    padding: 3rem 0;
+    color: #9ca3af;
+  }
+  .error {
+    text-align: center;
+    padding: 2rem;
+    color: #991b1b;
+    background: #fef2f2;
+    border-radius: 0.75rem;
+  }
+  .note {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    text-align: center;
+    margin-top: 0.75rem;
+  }
+</style>
+</head>
+<body>
+<div class="container" id="app">
+  <header>
+    <h1>IslamMeter</h1>
+    <p>Islamic Identity &amp; Values Dashboard</p>
+  </header>
+
+  <div class="card" id="loading">
+    <div class="loading">Loading your results…</div>
+  </div>
+
+  <div class="card" id="error" style="display:none;">
+    <div class="error">Unable to load results. Missing or invalid score data.</div>
+  </div>
+
+  <div id="results" style="display:none;">
+    <div class="card" id="match-card">
+      <h2>Closest Archetype</h2>
+      <div class="match">
+        <div>
+          <div class="match-label">Best Match</div>
+          <div class="match-name" id="archetype-name">—</div>
+        </div>
+        <div class="match-distance" id="archetype-distance"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Dimension Scores</h2>
+      <div class="scores-grid" id="scores-list"></div>
+      <div class="distances" id="distances-list"></div>
+    </div>
+
+    <div class="card">
+      <h2>Radar Chart</h2>
+      <div class="chart-wrapper">
+        <canvas id="radar-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <footer>Data is collected anonymously for research purposes.</footer>
+</div>
+
+<script>
+(function () {
+  /****************************************************************************
+   * 1. CONFIG — Edit archetypes and dimension labels here
+   ****************************************************************************/
+  const DIMENSIONS = [
+    { key: 'identity',   label: 'Identity' },
+    { key: 'compliance', label: 'Compliance' },
+    { key: 'political',  label: 'Political Method' },
+    { key: 'cultural',   label: 'Cultural' },
+    { key: 'authority',  label: 'Authority' },
+    { key: 'public',     label: 'Public Sphere' },
+  ];
+
+  const ARCHETYPES = [
+    {
+      name: 'Traditionalist',
+      desc: 'Deeply committed to orthodox beliefs, rules, and traditional scholarship.',
+      vector: [ 2,  2,  1,  1,  2,  2],
+    },
+    {
+      name: 'Cultural Muslim',
+      desc: 'Identity rooted in heritage and community; relaxed about rules and dogma.',
+      vector: [ 1, -1,  1,  2, -1, -1],
+    },
+    {
+      name: 'Political Activist',
+      desc: 'Seeks Islamic governance; comfortable with coercion for religious ends.',
+      vector: [ 2,  1, -2,  1,  1,  2],
+    },
+    {
+      name: 'Spiritual Seeker',
+      desc: 'Strong personal faith but skeptical of institutions, rules, and tradition.',
+      vector: [ 2, -2,  2,  0, -2, -1],
+    },
+    {
+      name: 'Liberal Reformer',
+      desc: 'Progressive interpretation; favours democracy, pluralism, and private faith.',
+      vector: [ 1, -2,  2,  1, -2,  0],
+    },
+    {
+      name: 'Quietist',
+      desc: 'Pious and observant but apolitical; keeps religion out of public square.',
+      vector: [ 2,  2,  2,  0,  1, -2],
+    },
+  ];
+
+  /****************************************************************************
+   * 2. GOOGLE APPS SCRIPT WEBHOOK — replace with your deployed URL
+   ****************************************************************************/
+  const WEBHOOK_URL = 'GOOGLE_APPS_SCRIPT_WEBHOOK_URL';
+
+  /****************************************************************************
+   * 3. UTILITY — Euclidean distance
+   ****************************************************************************/
+  function euclidean(a, b) {
+    if (a.length !== b.length) return Infinity;
+    return Math.sqrt(a.reduce((sum, ai, i) => sum + (ai - b[i]) ** 2, 0));
+  }
+
+  /****************************************************************************
+   * 4. PARSE URL PARAMETERS
+   ****************************************************************************/
+  function parseScores() {
+    const params = new URLSearchParams(window.location.search);
+    const scores = {};
+    let valid = true;
+
+    DIMENSIONS.forEach(({ key }) => {
+      const raw = params.get(key);
+      if (raw === null || raw === '') {
+        valid = false;
+        scores[key] = 0;
+      } else {
+        const val = Number(raw);
+        scores[key] = Number.isFinite(val) ? val : 0;
+      }
+    });
+
+    return { scores, valid };
+  }
+
+  /****************************************************************************
+   * 5. FIND CLOSEST ARCHETYPE
+   ****************************************************************************/
+  function findClosest(userVector) {
+    let best = null;
+    let bestDist = Infinity;
+    const results = [];
+
+    ARCHETYPES.forEach((a) => {
+      const dist = euclidean(userVector, a.vector);
+      results.push({ name: a.name, desc: a.desc, dist });
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = { name: a.name, desc: a.desc, dist };
+      }
+    });
+
+    return { best, all: results.sort((a, b) => a.dist - b.dist) };
+  }
+
+  /****************************************************************************
+   * 6. RENDER RADAR CHART
+   ****************************************************************************/
+  let chartInstance = null;
+
+  function renderChart(userVector) {
+    const ctx = document.getElementById('radar-chart').getContext('2d');
+
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+
+    const labels = DIMENSIONS.map((d) => d.label);
+
+    const datasets = [
+      {
+        label: 'You',
+        data: userVector,
+        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+        borderColor: 'rgba(16, 185, 129, 0.9)',
+        borderWidth: 2,
+        pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1,
+        pointRadius: 4,
+      },
+    ];
+
+    chartInstance = new Chart(ctx, {
+      type: 'radar',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          r: {
+            min: -2,
+            max: 2,
+            ticks: { stepSize: 1, font: { size: 10 }, backdropColor: 'transparent' },
+            grid: { color: 'rgba(0,0,0,0.06)' },
+            angleLines: { color: 'rgba(0,0,0,0.06)' },
+            pointLabels: { font: { size: 11, weight: '500' }, color: '#374151' },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                return ctx.parsed.r !== undefined ? ctx.parsed.r.toFixed(1) : '';
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  /****************************************************************************
+   * 7. RENDER SCORES
+   ****************************************************************************/
+  function renderScores(scores) {
+    const container = document.getElementById('scores-list');
+    container.innerHTML = '';
+
+    DIMENSIONS.forEach(({ key, label }) => {
+      const val = scores[key];
+      const cls = val > 0 ? 'positive' : val < 0 ? 'negative' : 'zero';
+      const sign = val > 0 ? '+' : '';
+      const div = document.createElement('div');
+      div.className = 'score-item';
+      div.innerHTML = `<span class="dim">${label}</span><span class="val ${cls}">${sign}${val}</span>`;
+      container.appendChild(div);
+    });
+  }
+
+  /****************************************************************************
+   * 8. RENDER DISTANCES
+   ****************************************************************************/
+  function renderDistances(all, bestName) {
+    const container = document.getElementById('distances-list');
+    container.innerHTML = '';
+
+    all.forEach((a) => {
+      const row = document.createElement('div');
+      row.className = 'dist-row' + (a.name === bestName ? ' best' : '');
+      row.innerHTML =
+        `<span class="label">${a.name}</span><span class="dist">${a.dist.toFixed(3)}</span>`;
+      container.appendChild(row);
+    });
+  }
+
+  /****************************************************************************
+   * 9. SEND DATA TO WEBHOOK (fire-and-forget)
+   ****************************************************************************/
+  function sendToWebhook(payload) {
+    if (!WEBHOOK_URL || WEBHOOK_URL === 'GOOGLE_APPS_SCRIPT_WEBHOOK_URL') {
+      // placeholder not replaced — silently skip
+      return;
+    }
+    try {
+      fetch(WEBHOOK_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch (_) {
+      // fail silently
+    }
+  }
+
+  /****************************************************************************
+   * 10. BOOT
+   ****************************************************************************/
+  function init() {
+    const { scores, valid } = parseScores();
+
+    document.getElementById('loading').style.display = 'none';
+
+    if (!valid) {
+      document.getElementById('error').style.display = 'block';
+      return;
+    }
+
+    const userVector = DIMENSIONS.map((d) => scores[d.key]);
+    const { best, all } = findClosest(userVector);
+
+    // populate UI
+    document.getElementById('archetype-name').textContent = best.name;
+    document.getElementById('archetype-distance').textContent =
+      `Distance: ${best.dist.toFixed(3)}`;
+
+    renderScores(scores);
+    renderDistances(all, best.name);
+    renderChart(userVector);
+
+    document.getElementById('results').style.display = 'block';
+
+    // fire webhook
+    sendToWebhook({
+      timestamp: new Date().toISOString(),
+      scores,
+      archetype: best.name,
+      archetypeDistance: best.dist,
+      allDistances: all,
+    });
+  }
+
+  // wait for Chart.js to load, then init
+  if (typeof Chart !== 'undefined') {
+    init();
+  } else {
+    document.addEventListener('DOMContentLoaded', init);
+  }
+})();
+</script>
+</body>
+</html>
